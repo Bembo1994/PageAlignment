@@ -131,6 +131,7 @@ def get_s3():
 
 
 def to_dataframe(name):
+
     s1 = get_s1()
     s2 = get_s2()
     s3 = get_s3()
@@ -141,35 +142,52 @@ def to_dataframe(name):
         "s3": s3
     }
 
+
     ffprofile = webdriver.FirefoxProfile()
     ffprofile.add_extension(ADBLOCK_PATH)
     ffprofile.set_preference("extensions.adblockplus.currentVersion", "3.10")
-    binary = FirefoxBinary('/usr/bin/firefox')
+    #binary = FirefoxBinary('/usr/bin/firefox')
     firefox = webdriver.Firefox(firefox_profile=ffprofile, firefox_binary=binary, executable_path=GECKO_PATH)
 
     for k in dataset.keys():
         rows = []
         if os.path.isfile("checkpoints/rows_" + k + ".pkl"):
             rows = pd.read_pickle(r'checkpoints/rows_' + k + '.pkl')
-        print(len(rows))
+        print(rows)
+        print("start, rows_{} length {}".format(k,len(rows)))
         s = dataset.get(k)
         for p in range(len(rows), len(s)):
+            #print(s[p])
             firefox.get(s[p])
             ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
-            leaves = WebDriverWait(firefox, 10, ignored_exceptions=ignored_exceptions).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//*[not(child::*)]")))
+            #titolo = WebDriverWait(firefox, 10, ignored_exceptions=ignored_exceptions).until(EC.presence_of_all_elements_located((By.XPATH, "//'title'")))
+            '''
+            if k == "s1" :
+                leaves = firefox.find_elements_by_xpath("//div[@class='content content--main cols-8']")
+            elif k == "s2" :
+                leaves = firefox.find_elements_by_xpath("//div[@class='flex flex-col bg-teams-MIL']")
+            else :
+                leaves = firefox.find_elements_by_xpath("//div[@class='wrapper clearfix container']")
             row_page = ""
             for leaf in leaves:
                 try:
+                    #rows.append(" " + leaf.text)
                     row_page += " " + leaf.text
                 except StaleElementReferenceException:
                     print("ECCEZIONE")
             row_page += "\n"
+            #print(row_page)
             rows.append(row_page)
-
-            if len(rows) % 100 == 0 or len(rows) == len(s) or len(rows) == 1:
+            '''
+            titolo = WebDriverWait(firefox, 10, ignored_exceptions=ignored_exceptions).until(lambda s: s.find_element(By.XPATH, "//head/title"))
+            #WebDriverWait(firefox, 10, ignored_exceptions=ignored_exceptions)#.until(EC.presence_of_all_elements_located((By.XPATH, "//head/title")))
+            #titolo = firefox.find_element_by_xpath("//head/title")
+            t = titolo.get_attribute("text").replace("-"," ").replace("|"," ").replace(","," ").replace("."," ").replace("/"," ")
+            rows.append(t)
+            if len(rows) % 10 == 0 or len(rows) == len(s) or len(rows) == 1:
                 pd.to_pickle(rows, "checkpoints/rows_" + k + ".pkl")
                 print("save checkpoint, rows_{} length {}".format(k, len(rows)))
+                #print(rows)
 
     firefox.close()
     name_sx = name.rsplit('_')[0]
@@ -183,6 +201,8 @@ def to_dataframe(name):
 
     for i in range(len(rows_dx)):
         rows_dx[i] = rows_dx[i].lower()
+
+    print(rows_sx)
 
     vectorizer = TfidfVectorizer(stop_words="english")
     vectors_sx = vectorizer.fit_transform(rows_sx)

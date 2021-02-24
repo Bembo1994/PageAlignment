@@ -16,6 +16,7 @@ def set_weight(lst1, lst2, mean):
 
 
 def main():
+
     if not os.path.isfile("dataframes/df_s1_s2.csv"):
         to_dataframe("s1_s2")
     if not os.path.isfile("dataframes/df_s1_s3.csv"):
@@ -48,7 +49,7 @@ def main():
         list_averages = df.mean()
 
         f = open("output/associazioni_" + k + ".txt", "a")
-        f_pesi = open("output/pesi_" + k + ".txt", "a")
+        #f_pesi = open("output/pesi_" + k + ".txt", "a")
 
         if k.rsplit('_')[0] == "s1" and k.rsplit('_')[1] == "s2":
             s_sx = get_s1()
@@ -77,8 +78,8 @@ def main():
                     _index) + " con cardinalità " + str(max))
                 f.write("P " + k.rsplit('_')[0][1] + " " + str(_i) + " P " + k.rsplit('_')[1][1] + " " + str(_index))
                 f.write("\n")
-                f_pesi.write(str(max))
-                f_pesi.write("\n")
+                #f_pesi.write(str(max))
+                #f_pesi.write("\n")
         f.close()
 
     calculate_f1("s1_s2")
